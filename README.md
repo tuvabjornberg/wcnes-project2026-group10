@@ -14,6 +14,7 @@ An educational project on backscatter using Raspberry Pi Pico
 - `baseband` contains a 2-FSK baseband code using Pico PIO together with a generator script, its description and some exercise questions.
 - `carrier-CC2500` contains a carrier generator using the Mikroe-1435 (CC2500) on the Pico.
 - `receiver-CC2500` contains a receiver using the Mikroe-1435 (CC2500) on the Pico.
+- `carrier-nrf52840` contains the configuration guidance for the nrf52840 as carrier.  
 - `carrier-Firefly` contains the configuration guidance for home setup with zolertia firefly as carrier.
 - `carrier-characteristics` contains a measurement to estimate the typical carrier bandwidth.
 - `carrier_receiver-CC1352` contains the configuration guidance for lab setup with CC1352 as carrier and/or receiver.
@@ -35,6 +36,6 @@ sleep 5;
 picotool load build/carrier_receiver_baseband.elf;
 picotool reboot;
 sleep 2;
-picocom -b 115200 /insert/your/patj;
+picocom -b 115200 /insert/your/path;
 ```
 
