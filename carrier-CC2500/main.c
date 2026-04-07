@@ -1,25 +1,25 @@
 /**
  * Tobias Mages & Wenqing Yan
- * 
+ *
  * Using the CC2500 to generate a 2450MHz unmodulated carrier with maximal output power of +1dBm.
- * 
+ *
  * GPIO  5 Chip select
  * GPIO 18 SCK/spi0_sclk
  * GPIO 19 MOSI/spi0_tx
- * 
- * The example uses SPI port 0. 
+ *
+ * The example uses SPI port 0.
  * The stdout has been directed to USB.
- * 
+ *
  */
 
+#include "carrier_CC2500.h"
+#include "hardware/spi.h"
+#include "pico/binary_info.h"
+#include "pico/stdlib.h"
 #include <stdio.h>
 #include <string.h>
-#include "pico/stdlib.h"
-#include "pico/binary_info.h"
-#include "hardware/spi.h"
-#include "carrier_CC2500.h"
 
-#define CARRIER_FEQ     2450000000
+#define CARRIER_FEQ 2450000000
 
 void main() {
     stdio_init_all();
