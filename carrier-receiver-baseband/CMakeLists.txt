@@ -50,12 +50,13 @@ pico_enable_stdio_usb(carrier_receiver_baseband 1)
 pico_enable_stdio_uart(carrier_receiver_baseband 0)
 
 # Add include directory 
-target_sources(carrier_receiver_baseband PRIVATE 
+target_sources(carrier_receiver_baseband PRIVATE
         main.c
         ../project_pico_libs/packet_generation.c
         ../project_pico_libs/receiver_CC2500.c
         ../project_pico_libs/carrier_CC2500.c
         ../project_pico_libs/backscatter.c
+        ../project_pico_libs/hamming.c
 )
 include_directories(../project_pico_libs)
 

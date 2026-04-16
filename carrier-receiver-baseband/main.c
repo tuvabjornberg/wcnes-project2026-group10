@@ -22,6 +22,7 @@
 
 #include "backscatter.h"
 #include "carrier_CC2500.h"
+#include "hamming.h"
 #include "hardware/clocks.h"
 #include "hardware/pio.h"
 #include "packet_generation.h"
@@ -44,6 +45,15 @@
 #define TWOANTENNAS  true
 
 #define CARRIER_FEQ 2450000000
+
+/*
+ * Hamming(7,4): r=3, k=4 data bits, n=7 codeword bits per block.
+ * 8 bytes (64 bits) of raw data → 16 blocks → 112 codeword bits = 14 bytes,
+ * which fits exactly into PAYLOADSIZE.
+ */
+#define HAMMING_R        3
+#define HAMMING_RAW_BITS (HAMMING_K(HAMMING_R) * (PAYLOADSIZE * 8 / HAMMING_N(HAMMING_R)))
+#define HAMMING_RAW_BYTES ((HAMMING_RAW_BITS + 7) / 8)
 
 int main() {
     /* setup SPI */
@@ -88,6 +98,12 @@ int main() {
     uint8_t *header_tmplate = packet_hdr_template(RECEIVER);
     uint8_t tx_payload_buffer[PAYLOADSIZE];
 
+    /* Hamming setup */
+    hamming_cfg_t hamming_cfg;
+    hamming_init(&hamming_cfg, HAMMING_R);
+    uint8_t raw_data[HAMMING_RAW_BYTES]; /* data before encoding */
+    uint8_t rx_decoded[HAMMING_RAW_BYTES]; /* data after decoding */
+
     /* Setup carrier */
     printf("\nConfiguring one CC2500 as carrier generator:\n");
     setupCarrier();
@@ -124,18 +140,39 @@ int main() {
             time_us = to_us_since_boot(get_absolute_time());
             status = readPacket(rx_buffer);
             printPacket(rx_buffer, status, time_us);
+
+            /* Hamming decode the payload (starts at HEADER_LEN in rx_buffer) */
+            if (!status.overflowed && status.CRCcheck &&
+                status.len >= HEADER_LEN + PAYLOADSIZE) {
+                int errs = hamming_decode_buffer(&hamming_cfg,
+                                                 &rx_buffer[HEADER_LEN],
+                                                 PAYLOADSIZE * 8,
+                                                 rx_decoded);
+                if (errs < 0) {
+                    printf("Hamming: uncorrectable error\n");
+                } else {
+                    printf("Hamming: %d bit error(s) corrected | decoded:", errs);
+                    for (uint8_t i = 0; i < HAMMING_RAW_BYTES; i++)
+                        printf(" %02x", rx_decoded[i]);
+                    printf("\n");
+                }
+            }
+
             RX_start_listen();
             rx_ready = true;
             break;
         case no_evt:
             // backscatter new packet if receiver is listening
             if (rx_ready) {
-                /* generate new data */
-                generate_data(tx_payload_buffer, PAYLOADSIZE, true);
+                /* generate raw data (HAMMING_RAW_BYTES) and Hamming-encode
+                 * into tx_payload_buffer (PAYLOADSIZE bytes) */
+                generate_data(raw_data, HAMMING_RAW_BYTES, true);
+                hamming_encode_buffer(&hamming_cfg, raw_data, HAMMING_RAW_BITS,
+                                      tx_payload_buffer);
 
                 /* add header (10 byte) to packet */
                 add_header(&message[0], seq, header_tmplate);
-                /* add payload to packet */
+                /* add Hamming-encoded payload to packet */
                 memcpy(&message[HEADER_LEN], tx_payload_buffer, PAYLOADSIZE);
 
                 /* casting for 32-bit fifo */
