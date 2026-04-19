@@ -53,9 +53,58 @@ def readfile(filename):
 
 
 # parse the hex payload, return a list with int numbers for each byte
-def parse_payload(payload_string):
+def parse_payload(payload_string, hamming_r=0):
     tmp = map(lambda x: int(x, base=16), payload_string.split())
-    return list(tmp)
+    payload = list(tmp)
+    if hamming_r > 0:
+        payload, _ = hamming_decode_buffer(payload, hamming_r)
+    return payload
+
+
+def hamming_decode_buffer(data_bytes, r=3):
+    n = (1 << r) - 1  # codeword bits per block (7 for r=3)
+
+    bits = []
+    for byte in data_bytes:
+        for i in range(8):
+            bits.append((byte >> i) & 1)
+
+    num_blocks = len(bits) // n
+    decoded_bits = []
+    total_errors = 0
+
+    for block_idx in range(num_blocks):
+        cw = bits[block_idx * n : (block_idx + 1) * n]
+
+        syndrome = 0
+        for i in range(r):
+            parity_pos = 1 << i
+            parity = 0
+            for pos in range(1, n + 1):
+                if pos & parity_pos:
+                    parity ^= cw[pos - 1]
+            if parity:
+                syndrome |= parity_pos
+
+        if syndrome != 0:
+            if syndrome <= n:
+                cw[syndrome - 1] ^= 1
+                total_errors += 1
+            else:
+                return data_bytes, -1
+
+        for pos in range(1, n + 1):
+            if pos & (pos - 1):
+                decoded_bits.append(cw[pos - 1])
+
+    decoded_bytes = []
+    for i in range(0, len(decoded_bits), 8):
+        byte = 0
+        for j in range(min(8, len(decoded_bits) - i)):
+            byte |= decoded_bits[i + j] << j
+        decoded_bytes.append(byte)
+
+    return decoded_bytes, total_errors
 
 
 def popcount(n):
@@ -161,8 +210,8 @@ def payload_for_peudo_seq(pseudo_seq, PACKET_LEN):
         ]  # TODO: pseudo sequence not within the first expected range
 
 
-def compute_ber_packet(df_row, PACKET_LEN=32):
-    payload = parse_payload(df_row.payload)
+def compute_ber_packet(df_row, PACKET_LEN=32, hamming_r=0):
+    payload = parse_payload(df_row.payload, hamming_r=hamming_r)
     pseudoseq = int(((payload[0] << 8) - 0) + payload[1])
     expected_data = payload_for_peudo_seq(pseudoseq, PACKET_LEN)
     # compute the bit errors
@@ -173,14 +222,14 @@ def compute_ber_packet(df_row, PACKET_LEN=32):
 
 
 # main function to compute the BER for each frame, return both the error statistics dataframe and in total BER for the received data
-def compute_ber(df, PACKET_LEN=32):
+def compute_ber(df, PACKET_LEN=32, hamming_r=0):
     # seq number initialization
     print(
         f"The total number of packets transmitted by the tag is {df.seq[len(df)-1]+1}."
     )
     if len(df) > 0:
         errors, total = zip(
-            *[compute_ber_packet(row, PACKET_LEN) for (_, row) in df.iterrows()]
+            *[compute_ber_packet(row, PACKET_LEN, hamming_r=hamming_r) for (_, row) in df.iterrows()]
         )
         return sum(errors) / sum(total)
     else:
