@@ -8,13 +8,23 @@
 #ifndef PACKET_GERNATION_LIB
 #define PACKET_GERNATION_LIB
 
+#include "hamming.h"
 #include "packet_generation.h"
 #include "pico/stdlib.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 
-#define PAYLOADSIZE       14
+#define MESSAGE_LEN 16 // 2B pseudo-seq + 14B data
+
+#define MESSAGE_BITS (MESSAGE_LEN * 8)
+/* Number of 4-bit blocks (rounded up) */
+#define HAMMING_BLOCKS ((MESSAGE_BITS + HAMMING_K(HAMMING_R) - 1) / HAMMING_K(HAMMING_R))
+
+/* Total encoded bits */
+#define HAMMING_ENCODED_BITS (HAMMING_BLOCKS * HAMMING_N(HAMMING_R))
+
+#define PAYLOADSIZE       ((HAMMING_ENCODED_BITS + 7) / 8)
 #define HEADER_LEN        10                                                       // 8 header + length + seq
 #define buffer_size(x, y) (((x + y) % 4 == 0) ? ((x + y) / 4) : ((x + y) / 4 + 1)) // define the buffer size with ceil((PAYLOADSIZE+HEADER_LEN)/4)
 

@@ -51,9 +51,8 @@
  * 8 bytes (64 bits) of raw data → 16 blocks → 112 codeword bits = 14 bytes,
  * which fits exactly into PAYLOADSIZE.
  */
-#define HAMMING_R        3
-#define HAMMING_RAW_BITS (HAMMING_K(HAMMING_R) * (PAYLOADSIZE * 8 / HAMMING_N(HAMMING_R)))
-#define HAMMING_RAW_BYTES ((HAMMING_RAW_BITS + 7) / 8)
+
+#define HAMMING_R 3
 
 int main() {
     /* setup SPI */
@@ -90,7 +89,7 @@ int main() {
                              DESIRED_BAUD, &backscatter_conf, instructionBuffer,
                              TWOANTENNAS);
 
-    static uint8_t message[buffer_size(PAYLOADSIZE + 2, HEADER_LEN) * 4] = {
+    static uint8_t message[buffer_size(PAYLOADSIZE, HEADER_LEN) * 4] = {
         0}; // include 10 header bytes
     static uint32_t buffer[buffer_size(PAYLOADSIZE, HEADER_LEN)] = {
         0}; // initialize the buffer
@@ -101,8 +100,8 @@ int main() {
     /* Hamming setup */
     hamming_cfg_t hamming_cfg;
     hamming_init(&hamming_cfg, HAMMING_R);
-    uint8_t raw_data[HAMMING_RAW_BYTES]; /* data before encoding */
-    uint8_t rx_decoded[HAMMING_RAW_BYTES]; /* data after decoding */
+    uint8_t raw_data[MESSAGE_LEN];   /* data before encoding */
+    uint8_t rx_decoded[MESSAGE_LEN]; /* data after decoding */
 
     /* Setup carrier */
     printf("\nConfiguring one CC2500 as carrier generator:\n");
@@ -124,7 +123,7 @@ int main() {
     set_filter_bandwidth_rx(backscatter_conf.minRxBw);
     sleep_ms(1);
     RX_start_listen();
-    printf("started listening\n");
+    printf("started listening (PAYLOADSIZE=%d)\n", PAYLOADSIZE);
     bool rx_ready = true;
 
     /* loop */
@@ -164,10 +163,10 @@ int main() {
         case no_evt:
             // backscatter new packet if receiver is listening
             if (rx_ready) {
-                /* generate raw data (HAMMING_RAW_BYTES) and Hamming-encode
+                /* generate raw data (MESSAGE_LEN) and Hamming-encode
                  * into tx_payload_buffer (PAYLOADSIZE bytes) */
-                generate_data(raw_data, HAMMING_RAW_BYTES, true);
-                hamming_encode_buffer(&hamming_cfg, raw_data, HAMMING_RAW_BITS,
+                generate_data(raw_data, MESSAGE_LEN, true);
+                hamming_encode_buffer(&hamming_cfg, raw_data, MESSAGE_BITS,
                                       tx_payload_buffer);
 
                 /* add header (10 byte) to packet */
