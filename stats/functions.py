@@ -213,8 +213,11 @@ def payload_for_peudo_seq(pseudo_seq, PACKET_LEN):
 def compute_ber_packet(df_row, PACKET_LEN=32, hamming_r=0):
     payload = parse_payload(df_row.payload, hamming_r=hamming_r)
     pseudoseq = int(((payload[0] << 8) - 0) + payload[1])
+    print(pseudoseq)
     expected_data = payload_for_peudo_seq(pseudoseq, PACKET_LEN)
     # compute the bit errors
+    print(f"payload:  {bytes(payload[2:]).hex(" ")}")
+    print(f"expected: {bytes(expected_data).hex(" ")}")
     return (
         compute_bit_errors(payload[2:], expected_data, PACKET_LEN=PACKET_LEN),
         8 * (2 + len(payload[2:])),
@@ -224,9 +227,9 @@ def compute_ber_packet(df_row, PACKET_LEN=32, hamming_r=0):
 # main function to compute the BER for each frame, return both the error statistics dataframe and in total BER for the received data
 def compute_ber(df, PACKET_LEN=32, hamming_r=0):
     # seq number initialization
-    print(
-        f"The total number of packets transmitted by the tag is {df.seq[len(df)-1]+1}."
-    )
+    # print(
+    #     f"The total number of packets transmitted by the tag is {df.seq[len(df)-1]+1}."
+    # )
     if len(df) > 0:
         errors, total = zip(
             *[compute_ber_packet(row, PACKET_LEN, hamming_r=hamming_r) for (_, row) in df.iterrows()]
