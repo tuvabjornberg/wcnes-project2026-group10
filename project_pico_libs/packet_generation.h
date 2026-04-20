@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MESSAGE_LEN 16 // 2B pseudo-seq + 14B data
+#define MESSAGE_LEN 14 // 2B pseudo-seq + 12B data
 
 #define MESSAGE_BITS (MESSAGE_LEN * 8)
 /* Number of 4-bit blocks (rounded up) */

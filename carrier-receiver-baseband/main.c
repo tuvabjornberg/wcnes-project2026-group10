@@ -80,7 +80,7 @@ int main() {
                              DESIRED_BAUD, &backscatter_conf, instructionBuffer,
                              TWOANTENNAS);
 
-    static uint8_t message[buffer_size(PAYLOADSIZE, HEADER_LEN) * 4] = {
+    static uint8_t message[buffer_size(PAYLOADSIZE + 2, HEADER_LEN) * 4] = {
         0}; // include 10 header bytes
     static uint32_t buffer[buffer_size(PAYLOADSIZE, HEADER_LEN)] = {
         0}; // initialize the buffer
