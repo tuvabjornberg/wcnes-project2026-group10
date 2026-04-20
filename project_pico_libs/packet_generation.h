@@ -28,6 +28,14 @@
 #define HEADER_LEN        10                                                       // 8 header + length + seq
 #define buffer_size(x, y) (((x + y) % 4 == 0) ? ((x + y) / 4) : ((x + y) / 4 + 1)) // define the buffer size with ceil((PAYLOADSIZE+HEADER_LEN)/4)
 
+/*
+ * Hamming(7,4): r=3, k=4 data bits, n=7 codeword bits per block.
+ * 8 bytes (64 bits) of raw data → 16 blocks → 112 codeword bits = 14 bytes,
+ * which fits exactly into PAYLOADSIZE.
+ */
+
+#define HAMMING_R 3
+
 #ifndef MINMAX
 #define MINMAX
 #define max(x, y) (((x) > (y)) ? (x) : (y))

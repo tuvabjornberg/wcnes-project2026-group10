@@ -46,14 +46,6 @@
 
 #define CARRIER_FEQ 2450000000
 
-/*
- * Hamming(7,4): r=3, k=4 data bits, n=7 codeword bits per block.
- * 8 bytes (64 bits) of raw data → 16 blocks → 112 codeword bits = 14 bytes,
- * which fits exactly into PAYLOADSIZE.
- */
-
-#define HAMMING_R 3
-
 int main() {
     /* setup SPI */
     stdio_init_all();
@@ -63,8 +55,7 @@ int main() {
     gpio_set_function(RADIO_MISO, GPIO_FUNC_SPI);
 
     // Make the SPI pins available to picotool
-    bi_decl(
-        bi_3pins_with_func(RADIO_MOSI, RADIO_MISO, RADIO_SCK, GPIO_FUNC_SPI));
+    bi_decl(bi_3pins_with_func(RADIO_MOSI, RADIO_MISO, RADIO_SCK, GPIO_FUNC_SPI));
 
     // Chip select is active-low, so we'll initialise it to a driven-high state
     gpio_init(RX_CSN);
@@ -151,7 +142,7 @@ int main() {
                     printf("Hamming: uncorrectable error\n");
                 } else {
                     printf("Hamming: %d bit error(s) corrected | decoded:", errs);
-                    for (uint8_t i = 0; i < HAMMING_RAW_BYTES; i++)
+                    for (uint8_t i = 0; i < MESSAGE_LEN; i++)
                         printf(" %02x", rx_decoded[i]);
                     printf("\n");
                 }
