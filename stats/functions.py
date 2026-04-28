@@ -43,7 +43,7 @@ def readfile(filename):
     df.frame = df.frame.str.rstrip().str.lstrip()
     df = df[df.frame.str.contains("packet overflow") == False]
     df["seq"] = df.frame.apply(lambda x: int(x[3:5], base=16))
-    df["payload"] = df.frame.apply(lambda x: x[6:])
+    df["payload"] = df.frame.apply(lambda x: " ".join(x.split()[2:])) 
     # parse the rssi data
     df.rssi = df.rssi.str.lstrip().str.split(" ", expand=True).iloc[:, 0]
     df.rssi = df.rssi.astype("int")
@@ -213,7 +213,7 @@ def payload_for_peudo_seq(pseudo_seq, PACKET_LEN):
 def compute_ber_packet(df_row, PACKET_LEN=32, hamming_r=0):
     payload = parse_payload(df_row.payload, hamming_r=hamming_r)
     pseudoseq = int(((payload[0] << 8) - 0) + payload[1])
-    print(pseudoseq)
+    
     expected_data = payload_for_peudo_seq(pseudoseq, PACKET_LEN)
     # compute the bit errors
     print(f"payload:  {bytes(payload[2:]).hex(" ")}")
@@ -223,6 +223,8 @@ def compute_ber_packet(df_row, PACKET_LEN=32, hamming_r=0):
         8 * (2 + len(payload[2:])),
     )  # 2+ for pseudo sequence
 
+def packets_transmitted(df):
+    return df.seq[len(df)-1]+1 # only checks the last seq number, wrapping makes a wrong result
 
 # main function to compute the BER for each frame, return both the error statistics dataframe and in total BER for the received data
 def compute_ber(df, PACKET_LEN=32, hamming_r=0):
