@@ -163,12 +163,18 @@ def payload_for_peudo_seq(pseudo_seq, PACKET_LEN):
 
 def compute_ber_packet(df_row, PACKET_LEN=32):
     payload = parse_payload(df_row.payload)
-    pseudoseq = int(((payload[0] << 8) - 0) + payload[1])
+    pseudoseq = extract_pseudo_seq(payload)
     expected_data = payload_for_peudo_seq(pseudoseq, PACKET_LEN)
     # compute the bit errors
     return (
         compute_bit_errors(payload[2:], expected_data, PACKET_LEN=PACKET_LEN),
         8 * (2 + len(payload[2:])),
+    )
+
+
+def extract_pseudo_seq(parsed_payload):
+    return int(
+        ((parsed_payload[0] << 8) - 0) + parsed_payload[1]
     )  # 2+ for pseudo sequence
 
 
