@@ -30,7 +30,7 @@ ymax = 0
 
 for ax, (dist, filename) in zip(axes, files.items()):
     df = readfile(filename + ".csv")
-    df.seq = np.unwrap(a, discont=180, period=256)
+    df.seq = np.unwrap(df.seq, discont=180, period=256)
     df = df[df.payload.apply(lambda x: len(x) == ((PAYLOADSIZE) * 3 - 1))]
     df.reset_index(inplace=True)
 
@@ -39,17 +39,11 @@ for ax, (dist, filename) in zip(axes, files.items()):
     )
 
     ax.plot(df.seq)
-    # ber = [e / l for e, l in bit_errors]
-    # ax.hist(ber, bins=15)
-    # ax.set_title(f"{dist} cm", fontsize=14)
-    # ax.set_xlabel("BER [%]", fontsize=12)
-    # ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=1))
-    # ax.grid(True)
-    # ymax = max(ymax, ax.get_ylim()[1])
-
+    last = df.seq[len(df.seq) - 1]
+    print(f"{dist}: {last} & {200/last:.2f}")
 
 # for ax in axes:
-#     ax.set_ylim(0, ymax)
+#     ax.set_ylim(0, ymax)j
 
 plt.tight_layout()
 plt.show()
