@@ -95,7 +95,7 @@ int main() {
     uint8_t rx_decoded[MESSAGE_LEN]; /* data after decoding */
 
     /* Setup carrier */
-    printf("\nConfiguring one CC2500 as carrier generator:\n");
+    printf("\n 2 Wa Wa We Wa Configuring one CC2500 as carrier generator:\n");
     setupCarrier();
     set_frecuency_tx(CARRIER_FEQ);
     sleep_ms(1);
