@@ -94,14 +94,14 @@ for ax, (dist, filename) in zip(axes, files):
     unwrapped = df.seq + 256 * ((k * times + m) // 256)
 
     ax.set_title(dist)
-    ax.scatter(times, unwrapped, label="unwrapped")
-    ax.plot(t, k * t + m, "--", label="fitted")
+    ax.scatter(times, df.seq, label="unwrapped")
+    ax.plot(t, np.mod(k * t + m, 256), "--", label="fitted")
     ax.legend()
 
     last = int(unwrapped[len(df) - 1])
     est_last = int(k * times[len(df) - 1] + m)
 
-    print(f"{dist}: {last} & {200/last:.2f}")
+    print(f"{dist}: {last} & {100*(200/last):.2f} \\%")
     # print(f"est {dist}: {est_last} & {200/est_last:.2f}")
 
 # for ax in axes:
